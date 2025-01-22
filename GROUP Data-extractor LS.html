@@ -144,13 +144,15 @@
         }
 
         saveToLocalStorageButton.addEventListener('click', function () {
-            if (currentSearchWord && currentResultHTML) {
-                saveToLocalStorage(currentSearchWord, currentResultHTML);
-                alert(`Data saved for search term: ${currentSearchWord}`);
+        const updatedData = outputDiv.innerHTML; // Get the current HTML content
+            if (currentSearchWord && updatedData) {
+                saveToLocalStorage(currentSearchWord, updatedData);
+                alert(`Updated data saved for search term: ${currentSearchWord}`);
             } else {
-                alert('No data to save. Perform a search first.');
+                alert('No data to save. Perform a search or make an update first.');
             }
         });
+
 
         printButton.addEventListener('click', function () {
             window.print();
@@ -167,11 +169,12 @@
         });
 
         function saveToLocalStorage(searchWord, htmlContent) {
-            const existingContent = localStorage.getItem('merged_extraction');
-            const newContent = existingContent ? existingContent + htmlContent : htmlContent;
-            localStorage.setItem('merged_extraction', newContent);
-            loadSavedData();
+        const existingContent = localStorage.getItem('merged_extraction');
+     const newContent = existingContent ? existingContent + htmlContent : htmlContent;
+        localStorage.setItem('merged_extraction', newContent);
+        loadSavedData();
         }
+
 
         function loadSavedData() {
             savedDataDiv.innerHTML = '<h3>Saved Extractions:</h3>';
