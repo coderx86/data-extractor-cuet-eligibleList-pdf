@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Extractor from .html File</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .saved-data {
+            margin-top: 20px;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #output, #output * {
+                visibility: visible;
+            }
+            #output {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput" accept=".html">
+    <input type="text" id="searchInput" placeholder="Enter SureName/Word to search">
+    <button id="extractButton">Extract</button>
+    <div class="controls">
+        <button id="printButton" style="display: none;">Print</button>
+        <button id="clearStorageButton">Clear Storage</button>
+        <button id="showSavedDataButton">Show Saved Data</button>
+        <button id="saveToLocalStorageButton" style="display: none;">Save to LocalStorage</button>
+    </div>
+    <div id="output"></div>
+    <div class="saved-data" id="savedData"></div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const extractButton = document.getElementById('extractButton');
+        const printButton = document.getElementById('printButton');
+        const clearStorageButton = document.getElementById('clearStorageButton');
+        const showSavedDataButton = document.getElementById('showSavedDataButton');
+        const saveToLocalStorageButton = document.getElementById('saveToLocalStorageButton');
+        const outputDiv = document.getElementById('output');
+        const savedDataDiv = document.getElementById('savedData');
+
+        let currentSearchWord = '';
+        let currentResultHTML = '';
+
+        extractButton.addEventListener('click', function () {
+            const fileInput = document.getElementById('fileInput').files[0];
+            const searchWord = searchInput.value.trim().toLowerCase();
+
+            if (!fileInput) {
+                alert('Please select an HTML file.');
+                return;
+            }
+
+            if (!searchWord) {
+                alert('Please enter a word to search.');
+                return;
+            }
+
+            document.title = `Data Extractor from .html File | Title: ${searchWord}`;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(event.target.result, 'text/html');
+                const rows = doc.querySelectorAll('tbody tr');
+                outputDiv.innerHTML = '';
+
+                let matchCount = 0;
+                let resultHTML = '<table><thead><tr><th>SL NO.</th><th>Application ID</th><th>Applicant Name</th><th>Exam Center</th></tr></thead><tbody>';
+
+                rows.forEach(row => {
+                    let found = false;
+                    row.querySelectorAll('td').forEach(cell => {
+                        if (cell.textContent.toLowerCase().includes(searchWord)) {
+                            found = true;
+                            matchCount++;
+                        }
+                    });
+                    if (found) {
+                        resultHTML += '<tr>' + row.innerHTML + '</tr>';
+                    }
+                });
+
+                resultHTML += '</tbody></table>';
+
+                outputDiv.innerHTML = resultHTML || 'No matches found.';
+
+                if (matchCount > 0) {
+                    const countDiv = document.createElement('div');
+                    countDiv.textContent = `Total Matches Found: ${matchCount}`;
+                    outputDiv.prepend(countDiv);
+                    currentSearchWord = searchWord;
+                    currentResultHTML = resultHTML;
+                    saveToLocalStorageButton.style.display = 'inline-block';
+                    printButton.style.display = 'inline-block';
+                } else {
+                    currentSearchWord = '';
+                    currentResultHTML = '';
+                    saveToLocalStorageButton.style.display = 'none';
+                    printButton.style.display = 'none';
+                }
+            };
+
+            reader.readAsText(fileInput);
+        });
+
+        saveToLocalStorageButton.addEventListener('click', function () {
+            if (currentSearchWord && currentResultHTML) {
+                saveToLocalStorage(currentSearchWord, currentResultHTML);
+                alert(`Data saved for search term: ${currentSearchWord}`);
+            } else {
+                alert('No data to save. Perform a search first.');
+            }
+        });
+
+        printButton.addEventListener('click', function () {
+            window.print();
+        });
+
+        clearStorageButton.addEventListener('click', function () {
+            localStorage.clear();
+            savedDataDiv.innerHTML = '';
+            alert('Local storage cleared.');
+        });
+
+        showSavedDataButton.addEventListener('click', function () {
+            loadSavedData();
+        });
+
+        function saveToLocalStorage(searchWord, htmlContent) {
+            const existingContent = localStorage.getItem('merged_extraction');
+            const newContent = existingContent ? existingContent + htmlContent : htmlContent;
+            localStorage.setItem('merged_extraction', newContent);
+            loadSavedData();
+        }
+
+        function loadSavedData() {
+            savedDataDiv.innerHTML = '<h3>Saved Extractions:</h3>';
+            const mergedContent = localStorage.getItem('merged_extraction');
+            if (mergedContent) {
+                const button = document.createElement('button');
+                button.textContent = 'Print Merge';
+                button.addEventListener('click', function () {
+                    outputDiv.innerHTML = mergedContent;
+                    window.print();
+                });
+                savedDataDiv.appendChild(button);
+            }
+        }
+
+        loadSavedData();
+    </script>
+</body>
+</html>
