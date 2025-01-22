@@ -84,9 +84,9 @@
                 outputDiv.innerHTML = '';
 
                 let matchCount = 0;
-                let resultHTML = '<table><thead><tr><th>SL NO.</th><th>Application ID</th><th>Applicant Name</th><th>Exam Center</th></tr></thead><tbody>';
+                let resultHTML = '<table><thead><tr><th>SL NO.</th><th>Application ID</th><th>Applicant Name</th><th>Exam Center</th><th>Actions</th></tr></thead><tbody>';
 
-                rows.forEach(row => {
+                rows.forEach((row, index) => {
                     let found = false;
                     row.querySelectorAll('td').forEach(cell => {
                         if (cell.textContent.toLowerCase().includes(searchWord)) {
@@ -95,18 +95,15 @@
                         }
                     });
                     if (found) {
-                        resultHTML += '<tr>' + row.innerHTML + '</tr>';
+                        resultHTML += `<tr data-index="${index}">` + row.innerHTML + `<td><button class="edit-btn" data-index="${index}">Remove</button></td></tr>`;
                     }
                 });
 
                 resultHTML += '</tbody></table>';
-
                 outputDiv.innerHTML = resultHTML || 'No matches found.';
 
                 if (matchCount > 0) {
-                    const countDiv = document.createElement('div');
-                    countDiv.textContent = `Total Matches Found: ${matchCount}`;
-                    outputDiv.prepend(countDiv);
+                    addEditListeners();
                     currentSearchWord = searchWord;
                     currentResultHTML = resultHTML;
                     saveToLocalStorageButton.style.display = 'inline-block';
@@ -121,6 +118,21 @@
 
             reader.readAsText(fileInput);
         });
+
+        function addEditListeners() {
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const index = this.getAttribute('data-index');
+                    document.querySelector(`tr[data-index="${index}"]`).remove();
+                    saveEditedData();
+                });
+            });
+        }
+
+        function saveEditedData() {
+            const updatedData = outputDiv.innerHTML;
+            localStorage.setItem('edited_extraction', updatedData);
+        }
 
         saveToLocalStorageButton.addEventListener('click', function () {
             if (currentSearchWord && currentResultHTML) {
