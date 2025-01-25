@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -176,19 +178,29 @@
         }
 
 
-        function loadSavedData() {
-            savedDataDiv.innerHTML = '<h3>Saved Extractions:</h3>';
-            const mergedContent = localStorage.getItem('merged_extraction');
-            if (mergedContent) {
-                const button = document.createElement('button');
-                button.textContent = 'Print Merge';
-                button.addEventListener('click', function () {
-                    outputDiv.innerHTML = mergedContent;
-                    window.print();
-                });
-                savedDataDiv.appendChild(button);
-            }
-        }
+function loadSavedData() {
+    savedDataDiv.innerHTML = '<h3>Saved Extractions:</h3>';
+    const mergedContent = localStorage.getItem('merged_extraction');
+    if (mergedContent) {
+        const rowCount = countRows(mergedContent); // Count the rows
+        savedDataDiv.innerHTML += `<p>Total Candidates: ${rowCount}</p>`; // Display total candidates
+        
+        const button = document.createElement('button');
+        button.textContent = 'Print Merge';
+        button.addEventListener('click', function () {
+            outputDiv.innerHTML = mergedContent + `<p>Total Candidates: ${rowCount}</p>`;
+            window.print();
+        });
+        savedDataDiv.appendChild(button);
+    }
+}
+
+function countRows(htmlContent) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const rows = doc.querySelectorAll('tbody tr'); // Count rows in tbody
+    return rows.length;
+}
 
         loadSavedData();
     </script>
